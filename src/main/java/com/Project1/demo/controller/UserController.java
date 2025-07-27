@@ -219,7 +219,7 @@ public class UserController {
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
             String username = authentication.getName();
-            log.info("User name: {}", username);// hoặc ép kiểu để lấy thông tin sâu hơn
+            log.info("User name: {}", username);
             return ResponseEntity.ok(Map.of("username", username));
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
