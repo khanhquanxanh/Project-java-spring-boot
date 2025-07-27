@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Sign Up</title>
+<link rel="stylesheet" th:href="@{/css/signUp/style.css}">
+</head>
+<body>
+	<h2>Sign Up Form</h2>
+	<form th:action="@{/view/register}" th:object="${account}"
+		method="post">
+
+		<!-- Basic Fields -->
+		<label>First Name:</label> <input type="text" th:field="*{fistname}"
+			placeholder="First Name" required /><br /> <label>Last Name:</label>
+		<input type="text" th:field="*{lastname}" placeholder="Last Name"
+			required /><br /> <label>Email:</label> <input type="email"
+			th:field="*{email}" placeholder="Email" required /><br /> <label>Phone:</label>
+		<input type="text" th:field="*{phone}" placeholder="Phone" required /><br />
+
+		<label>Date of Birth:</label> <input type="date"
+			th:field="*{dateOfbirth}" placeholder="MM/dd/yyyy" required /><br />
+
+		<label>Status:</label> <select th:field="*{status}" required>
+			<option value="">--Select--</option>
+			<option value="ACTIVE">ACTIVE</option>
+			<option value="INACTIVE">INACTIVE</option>
+			<option value="NONE">NONE</option>
+		</select><br /> <label>Gender:</label> <select th:field="*{gender}" required>
+			<option value="">--Select--</option>
+			<option value="MALE">Male</option>
+			<option value="FEMALE">Female</option>
+			<option value="OTHER">Other</option>
+		</select><br /> <label>User Type:</label> <select th:field="*{type}" required>
+			<option value="">--Select--</option>
+			<option value="OWNER">Owner</option>
+			<option value="ADMIN">Admin</option>
+			<option value="USER">User</option>
+		</select><br /> <label>Username:</label> <input type="text"
+			th:field="*{username}" placeholder="Username" required /><br /> <label>Password:</label>
+		<input type="password" th:field="*{password}" placeholder="Password"
+			required /><br />
+
+		<h3>Addresses</h3>
+        <div th:each="address, iterStat : *{addresses}">
+            <fieldset>
+                <legend th:text="'Address #' + ${iterStat.index + 1}"></legend>
+                <label>Apartment: <input type="text" th:field="*{addresses[__${iterStat.index}__].apartmentNumber}" /></label><br>
+                <label>Floor: <input type="text" th:field="*{addresses[__${iterStat.index}__].floor}" /></label><br>
+                <label>Building: <input type="text" th:field="*{addresses[__${iterStat.index}__].building}" /></label><br>
+                <label>Street No: <input type="text" th:field="*{addresses[__${iterStat.index}__].streetNumber}" /></label><br>
+                <label>Street: <input type="text" th:field="*{addresses[__${iterStat.index}__].street}" /></label><br>
+                <label>City: <input type="text" th:field="*{addresses[__${iterStat.index}__].city}" /></label><br>
+                <label>Country: <input type="text" th:field="*{addresses[__${iterStat.index}__].country}" /></label><br>
+                <label>Address Type: <input type="number" th:field="*{addresses[__${iterStat.index}__].addressType}" /></label><br>
+            </fieldset>
+        </div>
+
+		<button type="submit">Sign Up</button>
+	</form>
+</body>
+</html>

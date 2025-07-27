@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Giỏ hàng</title>
+  <link rel="stylesheet" href="/css/cart.css">
+</head>
+<body>
+
+<div class="cart-container">
+  <h1>Giỏ hàng</h1>
+
+  <div id="cartItems"></div>
+
+  <div class="cart-total" id="cartTotal">Tổng: 0₫</div>
+
+  <button class="submit-button" onclick="submitOrder()">Đặt hàng</button>
+</div>
+
+<script>
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+  function saveCart() {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }
+
+  function updateQuantity(productId, change) {
+    const item = cart.find(p => p.productId === productId);
+    if (!item) return;
+
+    item.quantity += change;
+    if (item.quantity < 1) item.quantity = 1;
+
+    saveCart();
+    renderCart();
+  }
+
+  function removeItem(productId) {
+    cart = cart.filter(item => item.productId !== productId);
+    saveCart();
+    renderCart();
+  }
+
+  function renderCart() {
+    const container = document.getElementById("cartItems");
+    const totalEl = document.getElementById("cartTotal");
+
+    if (cart.length === 0) {
+      container.innerHTML = "<p>Giỏ hàng trống.</p>";
+      totalEl.textContent = "Tổng: 0₫";
+      return;
+    }
+
+    let total = 0;
+
+    container.innerHTML = cart.map(item => {
+      const subtotal = item.productPrice * item.quantity;
+      total += subtotal;
+
+      return `
+        <div class="cart-item">
+          <div class="cart-info">
+            <img src="${item.productImage}" alt="${item.productName}">
+            <div class="product-details">
+              <div><strong>${item.productName}</strong></div>
+              <div>Giá: ${item.productPrice.toLocaleString()}₫</div>
+            </div>
+          </div>
+          <div class="quantity-controls">
+            <button onclick="updateQuantity(${item.productId}, -1)">−</button>
+            <span>${item.quantity}</span>
+            <button onclick="updateQuantity(${item.productId}, 1)">+</button>
+          </div>
+          <div>${subtotal.toLocaleString()}₫</div>
+          <button class="remove-button" onclick="removeItem(${item.productId})">X</button>
+        </div>
+      `;
+    }).join("");
+
+    totalEl.textContent = "Tổng: " + total.toLocaleString() + "₫";
+  }
+
+  function submitOrder() {
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) {
+      alert("Bạn cần đăng nhập để đặt hàng.");
+      return;
+    }
+
+    const payload = {
+      items: cart.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity
+      }))
+    };
+
+    fetch("/api/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert("Đặt hàng thành công! Mã đơn: " + data.orderId);
+      localStorage.removeItem("cart");
+      cart = [];
+      renderCart();
+    })
+    .catch(err => {
+      alert("Lỗi khi đặt hàng!");
+      console.error(err);
+    });
+  }
+
+  renderCart();
+</script>
+
+</body>
+</html>

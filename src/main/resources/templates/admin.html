@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý người dùng</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <script>
+        function openAction(actionUrl) {
+            window.open(actionUrl, "_blank");
+        }
+    </script>
+</head>
+<body>
+    <h2>Danh sách người dùng</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Họ</th>
+                <th>Tên</th>
+                <th>Email</th>
+                <th>Username</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="user : ${users}">
+                <td th:text="${user.firstName}">Họ</td>
+                <td th:text="${user.lastName}">Tên</td>
+                <td th:text="${user.email}">Email</td>
+                <td th:text="${user.username}">Username</td>
+                <td th:text="${user.status}">ACTIVE</td>
+                <td>
+                    <select onchange="if(this.value) openAction(this.value)">
+                        <option value="">-- Chọn tác vụ --</option>
+                        <option th:value="'/user/' + ${user.id}">👁️ Xem chi tiết</option>
+                        <option th:value="'/user/confirm/' + ${user.id}">✔️ Xác nhận</option>
+                        <option th:value="'/user/update/' + ${user.id}">✏️ Cập nhật</option>
+                        <option th:value="'/user/delete/' + ${user.id}">🗑️ Xoá</option>
+                    </select>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Manager - Product Management</title>
+  <link rel="stylesheet" th:href="@{/css/manager.css}">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    .actions button { margin-right: 5px; }
+    .image-thumb { width: 60px; height: auto; }
+  </style>
+</head>
+<body>
+
+  <h1>Product Management - Manager</h1>
+
+  <!-- Nút mở form thêm sản phẩm -->
+<button onclick="document.getElementById('addProductForm').style.display='block'">
+  Add Product
+</button>
+
+<!-- Form thêm sản phẩm -->
+<div id="addProductForm" style="display: none; margin-top: 20px;">
+  <form th:action="@{/view/manager/products/add}" method="post">
+    <label>Product Name:</label><br>
+    <input type="text" name="productName" required><br><br>
+
+    <label>Group:</label><br>
+    <select name="group" required>
+      <option value="tshirts">Tshirts</option>
+      <option value="shoes">Shoes</option>
+      <option value="pants">Pants</option>
+      <option value="hoodie">Hoodie</option>
+      <option value="outer">Outer</option>
+      <option value="jackets">Jackets</option>
+      <option value="accessories">Accessories</option>
+    </select><br><br>
+
+    <label>Brand:</label><br>
+    <select name="brand" required>
+      <option value="nike">Nike</option>
+      <option value="adidas">Adidas</option>
+      <option value="puma">Puma</option>
+      <option value="spike">Spike</option>
+    </select><br><br>
+
+    <label>Price:</label><br>
+    <input type="number" name="price" required><br><br>
+
+    <label>Image URL:</label><br>
+    <input type="text" name="imageUrl" required><br><br>
+
+    <button type="submit">Submit</button>
+    <button type="button" onclick="document.getElementById('addProductForm').style.display='none'">Cancel</button>
+  </form>
+</div>
+
+  <!-- Bảng sản phẩm -->
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Product Name</th>
+        <th>Group</th>
+        <th>Brand</th>
+        <th>Price</th>
+        <th>Image</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="product : ${products}">
+        <td th:text="${product.id}">1</td>
+        <td th:text="${product.productName}">Shirt</td>
+        <td th:text="${product.group}">tshirts</td>
+        <td th:text="${product.brand}">nike</td>
+        <td th:text="${product.price}">25000</td>
+        <td>
+          <img th:src="@{/${product.imageUrl}}" alt="Product Image" class="image-thumb">
+        </td>
+        <td class="actions">
+          <a th:href="@{'/view/manager/products/edit/' + ${product.id}}">
+            <button>Edit</button>
+          </a>
+          <a th:href="@{'/view/manager/products/delete/' + ${product.id}}" 
+             onclick="return confirm('Are you sure to delete this product?')">
+            <button>Delete</button>
+          </a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+<div id="accessDeniedModal" style="display: none; position: fixed; z-index: 1000; top: 30%; left: 50%; transform: translate(-50%, -50%);
+background-color: white; border: 1px solid #ccc; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.3); text-align: center;">
+  <h2 style="color: red;">403 - Không có quyền</h2>
+  <p id="accessDeniedMessage">Bạn không có quyền truy cập vào chức năng này.</p>
+  <button onclick="window.location.href='/'"
+    style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px;">
+    Quay về trang chủ
+  </button>
+</div>
+
+<script>
+  function showAccessDeniedPopup(message) {
+    document.getElementById("accessDeniedMessage").innerText = message || "Bạn không có quyền truy cập.";
+    document.getElementById("accessDeniedModal").style.display = "block";
+  }
+</script>
+<script>
+fetch("/view/manager", {
+  method: "GET",
+  headers: {
+    "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+  }
+})
+.then(response => response.json())
+.then(data => {
+  // Kiểm tra nếu JSON trả về có trường `error` là "Access Denied"
+  if (data.status === 403) {
+    showAccessDeniedPopup(data.message); // Hiển thị popup với thông báo
+    return;
+  }
+
+  // Xử lý dữ liệu bình thường nếu không có lỗi
+  console.log("Data hợp lệ:", data);
+})
+.catch(error => {
+  console.error("Lỗi:", error);
+});
+</script>
+</body>
+</html>

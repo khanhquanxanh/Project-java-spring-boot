@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Login Page</title>
+<link rel="stylesheet" th:href="@{/css/login/style.css}">
+</head>
+<body>
+	<div id="errorMessage" class="error"
+		style="color: red; margin-bottom: 10px;"></div>
+
+	<div class="login-page">
+		<div class="form">
+			<form id="loginForm">
+				<input type="text" id="username" name="username"
+					placeholder="username" required /> <input type="password"
+					id="password" name="password" placeholder="password" required />
+				<button type="submit">login</button>
+				<p class="message">
+					Not registered? <a href="signUp.html">Create an account</a>
+				</p>
+			</form>
+		</div>
+	</div>
+
+	<script>
+  document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById("username").focus();
+  });
+
+  document.getElementById("loginForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    const errorDiv = document.getElementById("errorMessage");
+    errorDiv.textContent = "";
+
+    fetch("/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        // Kiểm tra nếu có "accessToken" là đăng nhập thành công
+        if (data.accessToken) {
+          localStorage.setItem("accessToken", data.accessToken);
+          localStorage.setItem("refreshToken", data.refreshToken);
+          localStorage.setItem("userName", data.userName);
+          window.location.href = data.redirectUrl || "/view/home";
+        } else {
+          // Trường hợp lỗi, backend vẫn trả về status = 200
+          const errorMsg = data.message || "Đăng nhập thất bại";
+          errorDiv.textContent = errorMsg;
+        }
+      })
+      .catch(err => {
+        errorDiv.textContent = "Lỗi không xác định xảy ra!";
+        console.error(err);
+      });
+    });
+    </script>
+</script>
+</body>
+</html>
