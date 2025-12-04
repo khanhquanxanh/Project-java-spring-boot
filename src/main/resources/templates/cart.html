@@ -7,38 +7,52 @@
 </head>
 <body>
 
-<div class="cart-container">
-  <h1>Giỏ hàng</h1>
+<header class="site-header">
+  <div class="logo">
+    <a href="/view/home"><img src="/images/main-logo.png" alt="Logo" /></a>
+  </div>
+  <nav class="main-nav">
+    <a href="/view/home">Trang chủ</a>
+    <a href="/view/shop.html">Mua sắm</a>
+    <a href="/view/cart" class="active">Giỏ hàng</a>
+    <a href="/view/profile">Tài khoản</a>
+  </nav>
+</header>
+
+<main class="cart-container">
+  <h1>Giỏ hàng của bạn</h1>
 
   <div id="cartItems"></div>
 
-  <div class="cart-total" id="cartTotal">Tổng: 0₫</div>
+  <div class="cart-summary">
 
-  <button class="submit-button" onclick="submitOrder()">Đặt hàng</button>
-</div>
+    <label for="deliveryAddress" class="address-label">Địa chỉ giao hàng</label>
+    <textarea id="deliveryAddress" class="address-input" placeholder="Nhập địa chỉ nhận hàng..."></textarea>
+
+    <div class="cart-total" id="cartTotal">Tổng: 0₫</div>
+
+    <button class="submit-button" onclick="submitOrder()">Đặt hàng</button>
+  </div>
+</main>
 
 <script>
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  let cart = [];
 
-  function saveCart() {
-    localStorage.setItem("cart", JSON.stringify(cart));
+  const token = localStorage.getItem("accessToken");
+
+  if (!token) {
+    alert("Bạn cần đăng nhập để xem giỏ hàng.");
+    window.location.href = "/view/login";
   }
 
-  function updateQuantity(productId, change) {
-    const item = cart.find(p => p.productId === productId);
-    if (!item) return;
-
-    item.quantity += change;
-    if (item.quantity < 1) item.quantity = 1;
-
-    saveCart();
-    renderCart();
-  }
-
-  function removeItem(productId) {
-    cart = cart.filter(item => item.productId !== productId);
-    saveCart();
-    renderCart();
+  function loadCart() {
+    fetch("/cart/items", {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => { cart = data; renderCart(); })
+    .catch(err => { console.error(err); alert("Lỗi khi tải giỏ hàng"); });
   }
 
   function renderCart() {
@@ -46,7 +60,7 @@
     const totalEl = document.getElementById("cartTotal");
 
     if (cart.length === 0) {
-      container.innerHTML = "<p>Giỏ hàng trống.</p>";
+      container.innerHTML = "<p class='empty-cart'>Giỏ hàng trống.</p>";
       totalEl.textContent = "Tổng: 0₫";
       return;
     }
@@ -60,10 +74,10 @@
       return `
         <div class="cart-item">
           <div class="cart-info">
-            <img src="${item.productImage}" alt="${item.productName}">
+            <img src="/${item.productImage}" alt="${item.productName}" class="product-img">
             <div class="product-details">
-              <div><strong>${item.productName}</strong></div>
-              <div>Giá: ${item.productPrice.toLocaleString()}₫</div>
+              <div class="product-name">${item.productName}</div>
+              <div class="product-price">${item.productPrice.toLocaleString()}₫</div>
             </div>
           </div>
           <div class="quantity-controls">
@@ -71,7 +85,7 @@
             <span>${item.quantity}</span>
             <button onclick="updateQuantity(${item.productId}, 1)">+</button>
           </div>
-          <div>${subtotal.toLocaleString()}₫</div>
+          <div class="subtotal">${subtotal.toLocaleString()}₫</div>
           <button class="remove-button" onclick="removeItem(${item.productId})">X</button>
         </div>
       `;
@@ -80,20 +94,43 @@
     totalEl.textContent = "Tổng: " + total.toLocaleString() + "₫";
   }
 
+  function updateQuantity(productId, change) {
+    const item = cart.find(p => p.productId === productId);
+    if (!item) return;
+    let newQuantity = Math.max(1, item.quantity + change);
+
+    fetch("/cart/update", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ productId, quantity: newQuantity })
+    })
+    .then(() => { item.quantity = newQuantity; renderCart(); })
+    .catch(err => console.error(err));
+  }
+
+  function removeItem(productId) {
+    fetch("/cart/remove", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ productId })
+    })
+    .then(() => { cart = cart.filter(i => i.productId !== productId); renderCart(); })
+    .catch(err => console.error(err));
+  }
+
   function submitOrder() {
-    const token = localStorage.getItem("accessToken");
+    const address = document.getElementById("deliveryAddress").value.trim();
 
-    if (!token) {
-      alert("Bạn cần đăng nhập để đặt hàng.");
-      return;
+    if (address.length < 5) {
+        alert("Vui lòng nhập địa chỉ giao hàng hợp lệ!");
+        return;
     }
-
-    const payload = {
-      items: cart.map(item => ({
-        productId: item.productId,
-        quantity: item.quantity
-      }))
-    };
 
     fetch("/api/orders", {
       method: "POST",
@@ -101,22 +138,25 @@
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ deliveryAddress: address })
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) throw new Error("Order failed");
+        return res.json();
+    })
     .then(data => {
-      alert("Đặt hàng thành công! Mã đơn: " + data.orderId);
-      localStorage.removeItem("cart");
-      cart = [];
-      renderCart();
+        alert("Đặt hàng thành công! Mã đơn: " + data.id);
+        cart = [];
+        renderCart();
+        document.getElementById("deliveryAddress").value = "";
     })
     .catch(err => {
-      alert("Lỗi khi đặt hàng!");
-      console.error(err);
+        console.error(err);
+        alert("Đặt hàng thất bại!");
     });
   }
 
-  renderCart();
+  loadCart();
 </script>
 
 </body>

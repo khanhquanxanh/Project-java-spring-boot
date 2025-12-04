@@ -46,7 +46,7 @@ public class CustomizeRequestFilter extends OncePerRequestFilter {
         
         String path = request.getRequestURI();
         if (path.startsWith("/auth/")
-                || path.startsWith("/view/")
+//                || path.startsWith("/view/")
                 || path.startsWith("/css/")
                 || path.startsWith("/js/")
                 || path.startsWith("/images/")

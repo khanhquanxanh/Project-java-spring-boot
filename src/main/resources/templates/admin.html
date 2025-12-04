@@ -8,6 +8,32 @@
         function openAction(actionUrl) {
             window.open(actionUrl, "_blank");
         }
+        
+        document.addEventListener("DOMContentLoaded", () => {
+        	  const token = localStorage.getItem("accessToken");
+        	  if (!token) {
+        	    // Chưa đăng nhập → chuyển về trang login
+        	    window.location.href = "/view/login";
+        	    return;
+        	  }
+
+        	  // Gọi API để xác minh quyền
+        	  fetch("/api/auth/check-role", {
+        	    headers: { "Authorization": `Bearer ${token}` }
+        	  })
+        	  .then(res => {
+        	    if (!res.ok) throw new Error();
+        	    return res.json();
+        	  })
+        	  .then(data => {
+        	    if (!data.roles.includes("ADMIN")) {
+        	      window.location.href = "/view/home";
+        	    }
+        	  })
+        	  .catch(() => {
+        	    window.location.href = "/view/login";
+        	  });
+        	});
     </script>
 </head>
 <body>

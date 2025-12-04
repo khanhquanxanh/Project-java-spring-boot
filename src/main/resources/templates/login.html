@@ -45,12 +45,17 @@
       })
       .then(res => res.json())
       .then(data => {
-        // Kiểm tra nếu có "accessToken" là đăng nhập thành công
+        // Kiểm tra nếu có "accessToken" là đã đăng nhập thành công
         if (data.accessToken) {
           localStorage.setItem("accessToken", data.accessToken);
           localStorage.setItem("refreshToken", data.refreshToken);
           localStorage.setItem("userName", data.userName);
+          //window.location.href = data.redirectUrl || "/view/home";
+          const token = data.accessToken;
+
+          // Gọi trang được phân quyền
           window.location.href = data.redirectUrl || "/view/home";
+        
         } else {
           // Trường hợp lỗi, backend vẫn trả về status = 200
           const errorMsg = data.message || "Đăng nhập thất bại";
@@ -63,6 +68,5 @@
       });
     });
     </script>
-</script>
 </body>
 </html>

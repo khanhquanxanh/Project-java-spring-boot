@@ -21,20 +21,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.Project1.demo.configuration.Translator;
-import com.Project1.demo.dto.request.OrderRequestDTO;
 import com.Project1.demo.dto.request.UserRequestDTO;
-import com.Project1.demo.dto.response.OrderResponseDTO;
 import com.Project1.demo.dto.response.PageResponse;
 import com.Project1.demo.dto.response.ResponseData;
 import com.Project1.demo.dto.response.ResponseError;
 import com.Project1.demo.dto.response.UserDetailResponse;
 import com.Project1.demo.exception.ResourceNotFoundException;
-import com.Project1.demo.sevice.OrderService;
 import com.Project1.demo.sevice.UserServer;
 import com.Project1.demo.util.UserStatus;
 
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -50,7 +46,6 @@ public class UserController {
 
 	private final UserServer userService;
 	
-	private final OrderService orderService;
 
 	@PostMapping(value = "/")
 	public ResponseData<Long> adduser(@Valid @RequestBody UserRequestDTO userdto) {
@@ -226,12 +221,5 @@ public class UserController {
         }
     }
 
-    @PostMapping
-    public ResponseEntity<?> createOrder(@RequestBody OrderRequestDTO request, HttpServletRequest servletRequest) {
-        String token = servletRequest.getHeader("Authorization").replace("Bearer ", "");
-        OrderResponseDTO result = orderService.createOrder(request, token);
-        return ResponseEntity.ok(result);
-    }
-	
 
 }

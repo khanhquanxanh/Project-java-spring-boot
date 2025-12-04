@@ -10,5 +10,18 @@ public enum Brands {
 	@JsonProperty("puma")
 	Puma,
 	@JsonProperty("spike")
-	Spike
+	Spike;
+	
+	public static Brands fromString(String value) {
+        for (Brands b : Brands.values()) {
+            JsonProperty prop = null;
+            try {
+                prop = b.getClass().getField(b.name()).getAnnotation(JsonProperty.class);
+            } catch (NoSuchFieldException e) { }
+            if ((prop != null && prop.value().equalsIgnoreCase(value)) || b.name().equalsIgnoreCase(value)) {
+                return b;
+            }
+        }
+        throw new IllegalArgumentException("No enum constant for value " + value);
+    }
 }

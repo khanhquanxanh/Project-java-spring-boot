@@ -67,14 +67,20 @@ public class ViewController {
 		return "admin";
 	}
 	
+//	@GetMapping("/manager")
+//	//@PreAuthorize("hasAuthority('Manager')")
+//	@PreAuthorize("hasAnyAuthority('Admin', 'Manager')")
+//	public String manager(Model model) {
+//		model.addAttribute("products", productRepository.findAll());
+//		return "manager";
+//	}
+	
 	@GetMapping("/manager")
-	@PreAuthorize("hasAuthority('Manager')")
-	public String manager(Model model) {
-		model.addAttribute("products", productRepository.findAll());
+	public String manager() {
 		return "manager";
 	}
 
-	@GetMapping("/shop")
+	@GetMapping("/shop.html")
 	public String shop(@RequestParam(defaultValue = "0") int pageNo, @RequestParam(defaultValue = "12") int pageSize,
 			Model model) {
 

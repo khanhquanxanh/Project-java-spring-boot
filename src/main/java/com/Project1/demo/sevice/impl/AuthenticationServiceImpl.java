@@ -7,6 +7,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -30,6 +31,7 @@ import static com.Project1.demo.util.TokenType.REFRESH_TOKEN;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,22 +46,26 @@ public class AuthenticationServiceImpl implements AuthenticationService{
 	public TokenResponse getAccessToken(SignInRequest request) {
 		log.info("Get access token");
 		
-		List<String> authorities = new ArrayList<>();
-		// Thực hiện xác thực với username và password
+		List<String> authorities;
 		try {
-            // Thực hiện xác thực với username và password
-            Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+		    Authentication authenticate = authenticationManager.authenticate(
+		        new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+		    );
 
-            log.info("isAuthenticated = {}", authenticate.isAuthenticated());
-            log.info("Authorities: {}", authenticate.getAuthorities().toString());
-            authorities.add(authenticate.getAuthorities().toString());
+		    log.info("isAuthenticated = {}", authenticate.isAuthenticated());
+		    log.info("Authorities: {}", authenticate.getAuthorities());
 
-            // Nếu xác thực thành công, lưu thông tin vào SecurityContext
-            SecurityContextHolder.getContext().setAuthentication(authenticate);
-        } catch (BadCredentialsException | DisabledException | InternalAuthenticationServiceException e) {
-            log.error("errorMessage: {}", e.getMessage());
-            throw new InternalAuthenticationServiceException(e.getMessage());
-        }
+		    // Convert GrantedAuthority -> String
+		    authorities = authenticate.getAuthorities()
+		                              .stream()
+		                              .map(GrantedAuthority::getAuthority)
+		                              .collect(Collectors.toList());
+
+		    SecurityContextHolder.getContext().setAuthentication(authenticate);
+		} catch (BadCredentialsException | DisabledException | InternalAuthenticationServiceException e) {
+		    log.error("Authentication failed: {}", e.getMessage());
+		    throw new InternalAuthenticationServiceException(e.getMessage());
+		}
 
         // Get user
         //var user = userRepository.findByUsername(request.getUsername());

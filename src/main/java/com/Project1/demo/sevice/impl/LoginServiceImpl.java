@@ -66,6 +66,8 @@ public class LoginServiceImpl implements LoginService{
 	    if ("[Manager]".equals(roles)) {
 	        redirectUrl = "/view/manager";
 	    }
+	    
+	    log.info("redirectUrl = {}", redirectUrl);
 
         // Get user
         //var user = userRepository.findByUsername(request.getUsername());

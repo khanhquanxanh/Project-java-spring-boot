@@ -1,5 +1,7 @@
 package com.Project1.demo.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,5 +17,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>{
 	Page<Product> findByBrand(Brands brand, Pageable pageable);
 		
 	Page<Product> findByGroup(GroupProduct group, Pageable pageable);
+	
+	boolean existsBySlug(String slug);
+	
+    Optional<Product> findBySlug(String slug);
 	
 }

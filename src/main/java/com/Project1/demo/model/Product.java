@@ -23,6 +23,10 @@ import lombok.Setter;
 @Table(name = "tbl_product")
 public class Product extends AbstractEntity<Long>{
 	
+	public Product(Long id) {
+        this.setId(id);
+    }
+	
 	@Column(name = "product_name")
 	private String productName;
 	
@@ -39,4 +43,7 @@ public class Product extends AbstractEntity<Long>{
 	
 	@Column(name = "image_url")
 	private String imageUrl;
+	
+	@Column(unique = true)
+    private String slug;
 }

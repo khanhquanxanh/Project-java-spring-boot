@@ -18,7 +18,7 @@ public class ProductRequestDTO {
 	private GroupProduct group;
 	
 	
-	private long price;
+	private Long price;
 	
 	
 	private Brands brand;

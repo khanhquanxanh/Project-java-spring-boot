@@ -1,63 +1,73 @@
 package com.Project1.demo.sevice.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.Project1.demo.dto.request.OrderItemDTO;
 import com.Project1.demo.dto.request.OrderRequestDTO;
 import com.Project1.demo.dto.response.OrderResponseDTO;
+import com.Project1.demo.model.Cart;
+import com.Project1.demo.model.CartItem;
 import com.Project1.demo.model.Order;
 import com.Project1.demo.model.OrderItem;
-import com.Project1.demo.model.Product;
 import com.Project1.demo.model.User;
+import com.Project1.demo.repository.CartItemRepository;
+import com.Project1.demo.repository.CartRepository;
 import com.Project1.demo.repository.OrderRepository;
-import com.Project1.demo.repository.ProductRepository;
-import com.Project1.demo.repository.UserRepository;
-import com.Project1.demo.sevice.JwtService;
 import com.Project1.demo.sevice.OrderService;
-import com.Project1.demo.util.OrderStatus;
 
 import lombok.RequiredArgsConstructor;
-
-import static com.Project1.demo.util.TokenType.ACCESS_TOKEN;
-import static com.Project1.demo.util.TokenType.REFRESH_TOKEN;
-
-import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService{
 	
-	private final JwtService jwtService;
-    private final UserRepository userRepository;
-    private final ProductRepository productRepository;
-    private final OrderRepository orderRepository;
+	private final OrderRepository orderRepository;
+    private final CartRepository cartRepository;
+    private final CartItemRepository cartItemRepository;
 
 	@Override
-	public OrderResponseDTO createOrder(OrderRequestDTO request, String token) {
-        String username = jwtService.extractUsername(token,ACCESS_TOKEN);
-        User user = userRepository.findByUsername(username);
+	public Order createOrder(User user, OrderRequestDTO request) {
+		// Lấy giỏ hàng của user
+        Cart cart = cartRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        List<CartItem> cartItems = cartItemRepository.findByCartUserId(user.getId());
+        if (cartItems.isEmpty()) {
+            throw new RuntimeException("Cart is empty");
+        }
 
         Order order = new Order();
         order.setUser(user);
-        order.setOrderDate(new Date());
-        order.setStatus(OrderStatus.PENDING);
+        order.setDeliveryAddress(request.getDeliveryAddress());
 
-        long total = 0;
-        for (OrderItemDTO itemDTO : request.getItems()) {
-            Product product = productRepository.findById(itemDTO.getProductId()).orElseThrow();
+        long totalAmount = 0;
+        List<OrderItem> orderItems = new ArrayList<>();
+
+        for (CartItem cartItem : cartItems) {
             OrderItem item = new OrderItem();
-            item.setProduct(product);
-            item.setQuantity(itemDTO.getQuantity());
-            item.setPriceAtPurchase(product.getPrice());
+            item.setOrder(order);
+            item.setProduct(cartItem.getProduct());
+            item.setQuantity(cartItem.getQuantity());
 
-            order.addItem(item);
-            total += product.getPrice() * itemDTO.getQuantity();
+            orderItems.add(item);
+
+            totalAmount += cartItem.getProduct().getPrice() * cartItem.getQuantity();
         }
 
-        order.setTotalAmount(total);
-        Order saved = orderRepository.save(order);
+        order.setItems(orderItems);
+        order.setTotalAmount(totalAmount);
 
-        return new OrderResponseDTO(saved.getId(), total, saved.getStatus());
-    }
+        // Lưu đơn hàng (tự cascade items)
+        Order savedOrder = orderRepository.save(order);
+
+        // Xóa giỏ hàng sau khi đặt
+        cartItemRepository.deleteAll(cartItems);
+
+        return savedOrder;
+    
+	}
 
 }

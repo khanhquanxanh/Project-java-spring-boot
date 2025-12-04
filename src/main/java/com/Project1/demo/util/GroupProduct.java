@@ -16,5 +16,18 @@ public enum GroupProduct {
 	@JsonProperty("jackets")
 	Jackets,
 	@JsonProperty("accessories")
-	Accessories
+	Accessories;
+	
+	public static GroupProduct fromString(String value) {
+        for (GroupProduct g : GroupProduct.values()) {
+            JsonProperty prop = null;
+            try {
+                prop = g.getClass().getField(g.name()).getAnnotation(JsonProperty.class);
+            } catch (NoSuchFieldException e) { }
+            if ((prop != null && prop.value().equalsIgnoreCase(value)) || g.name().equalsIgnoreCase(value)) {
+                return g;
+            }
+        }
+        throw new IllegalArgumentException("No enum constant for value " + value);
+    }
 }

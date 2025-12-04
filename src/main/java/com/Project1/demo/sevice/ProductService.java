@@ -2,6 +2,8 @@ package com.Project1.demo.sevice;
 
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.Project1.demo.dto.request.ProductRequestDTO;
 import com.Project1.demo.dto.response.PageResponse;
 import com.Project1.demo.dto.response.ProductDetailResponse;
@@ -21,5 +23,12 @@ public interface ProductService {
 	
 	PageResponse getProductByGroup(int pageNo, int pageSize,GroupProduct group, String... sort);
 	
+	public Product addProduct(ProductRequestDTO dto, MultipartFile imageFile);
+	
+	public Product updateProduct(Long id, ProductRequestDTO dto, MultipartFile file);
+	
+	public void deleteProduct(Long id);
+	
+	public Product getProductById(Long id);
 
 }
